@@ -20,7 +20,8 @@ const Dashboard = ({
   weather, 
   marketPrices, 
   inventoryData, 
-  expenseData 
+  expenseData,
+  user
 }) => {
   const { summary: invSummary = {}, plots = [], harvestInventory = [] } = inventoryData || {};
   const { analytics = {} } = expenseData || {};
@@ -41,7 +42,7 @@ const Dashboard = ({
             Smart Agriculture Hub &bull; Active Season 2026
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Welcome back, Farmer Sameer 👋
+            Welcome back, {user?.name ? user.name : 'Farmer'} 👋
           </h1>
           <p className="mt-2 text-sm sm:text-base text-emerald-100 leading-relaxed">
             Monitor crop health with AI disease detection, track real-time Mandi market prices, manage land plots, and maximize farm profitability.
