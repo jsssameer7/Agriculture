@@ -24,11 +24,11 @@ app.use('/api/expenses', expenseRouter);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    appName: 'AgriSmart Backend Server',
+    appName: 'Gunda Plant Platform Backend Server',
     time: new Date().toISOString()
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🌾 AgriSmart Backend Server running on http://localhost:${PORT}`);
+  console.log(`🌾 Gunda Plant Platform Backend Server running on http://localhost:${PORT}`);
 });

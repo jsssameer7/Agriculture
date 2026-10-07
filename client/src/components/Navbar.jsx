@@ -41,7 +41,7 @@ const Navbar = ({ activeTab, setActiveTab, lang, setLang }) => {
             </div>
             <div>
               <span className="font-bold text-xl tracking-tight text-white flex items-center gap-1.5">
-                AgriSmart <span className="bg-emerald-700/80 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-medium border border-emerald-500/30">Krishi Mitra</span>
+                Gunda Plant Platform <span className="bg-emerald-700/80 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-medium border border-emerald-500/30">Krishi Mitra</span>
               </span>
               <p className="text-[11px] text-emerald-200 font-medium">Smart Farm & Harvest Management</p>
             </div>

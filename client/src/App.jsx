@@ -107,7 +107,7 @@ const App = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>🌾 <strong>AgriSmart (Krishi Mitra)</strong> - Empowering Farmers with AI & Real-time Market Intelligence</span>
+          <span>🌾 <strong>Gunda Plant Platform (Krishi Mitra)</strong> - Empowering Farmers with AI & Real-time Market Intelligence</span>
           <span>Version 2.0 &bull; Built with React & Express</span>
         </div>
       </footer>
