@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { saveUserProfile } from '../services/supabase';
+
 import { 
   Sprout, 
   Mail, 
@@ -41,31 +43,31 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMessage('');
 
-    // Simulate authenticating API request with smooth animation
+    const userProfile = {
+      name: formData.name || (mode === 'login' ? 'Sameer Farmer' : 'New Agri User'),
+      email: formData.email || 'user@gundaplant.com',
+      phone: formData.phone || '+91 98765 43210',
+      role: role,
+      location: formData.farmLocation,
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${formData.email || 'GundaFarmer'}`
+    };
+
+    // Save to Supabase (if configured)
+    await saveUserProfile(userProfile);
+
+    setLoading(false);
+    setSuccessMessage(mode === 'login' ? 'Successfully Logged In!' : 'Account Created Successfully!');
+
     setTimeout(() => {
-      setLoading(false);
-      const userProfile = {
-        name: formData.name || (mode === 'login' ? 'Sameer Farmer' : 'New Agri User'),
-        email: formData.email || 'user@gundaplant.com',
-        phone: formData.phone || '+91 98765 43210',
-        role: role,
-        location: formData.farmLocation,
-        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${formData.email || 'GundaFarmer'}`
-      };
-
-      setSuccessMessage(mode === 'login' ? 'Successfully Logged In!' : 'Account Created Successfully!');
-
-      setTimeout(() => {
-        onLoginSuccess(userProfile);
-        onClose();
-        setSuccessMessage('');
-      }, 900);
-    }, 1200);
+      onLoginSuccess(userProfile);
+      onClose();
+      setSuccessMessage('');
+    }, 800);
   };
 
   const handleDemoLogin = (demoRole) => {
