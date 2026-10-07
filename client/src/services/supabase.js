@@ -6,47 +6,66 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishabl
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
- * Fetch user profile from Supabase by User ID or Email
+ * Register a new user profile with password in Supabase profiles table
  */
-export const getUserProfile = async (emailOrId) => {
+export const registerUserInSupabase = async ({ name, email, password, phone, role, location }) => {
   try {
+    // 1. Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingUser) {
+      return { success: false, error: 'Email already registered. Please sign in instead.' };
+    }
+
+    // 2. Insert new user profile with password
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
-      .or(`id.eq.${emailOrId},email.eq.${emailOrId}`)
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error fetching Supabase profile:', error.message);
-    return null;
-  }
-};
-
-/**
- * Upsert (Save/Update) user profile in Supabase
- */
-export const saveUserProfile = async (profileData) => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert({
-        name: profileData.name,
-        email: profileData.email,
-        phone: profileData.phone || null,
-        role: profileData.role || 'farmer',
-        location: profileData.location || 'Indore, MP',
-        avatar_url: profileData.avatarUrl || null,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'email' })
+      .insert({
+        name: name || 'Agri User',
+        email: email,
+        password: password,
+        phone: phone || null,
+        role: role || 'farmer',
+        location: location || 'Indore, MP',
+        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`
+      })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return { success: true, user: data };
   } catch (error) {
-    console.error('Error saving profile to Supabase:', error.message);
-    return null;
+    console.error('Supabase Registration Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Log in user by verifying email and password in Supabase profiles table
+ */
+export const loginUserInSupabase = async (email, password) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: 'User account not found. Please register first.' };
+    }
+
+    if (data.password !== password) {
+      return { success: false, error: 'Incorrect password. Please try again.' };
+    }
+
+    return { success: true, user: data };
+  } catch (error) {
+    console.error('Supabase Login Error:', error.message);
+    return { success: false, error: 'Authentication failed. Please check your email and password.' };
   }
 };

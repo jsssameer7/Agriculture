@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { saveUserProfile } from '../services/supabase';
+import { registerUserInSupabase, loginUserInSupabase } from '../services/supabase';
 
 import { 
   Sprout, 
@@ -9,6 +9,7 @@ import {
   Phone, 
   ArrowRight, 
   CheckCircle2, 
+  AlertCircle,
   X, 
   Eye, 
   EyeOff, 
@@ -26,6 +27,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [loginMethod, setLoginMethod] = useState('email'); // 'email' | 'phone'
 
   // Form inputs
@@ -47,32 +49,56 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMessage('');
+    setErrorMessage('');
 
-    const userProfile = {
-      name: formData.name || (mode === 'login' ? 'Sameer Farmer' : 'New Agri User'),
-      email: formData.email || 'user@gundaplant.com',
-      phone: formData.phone || '+91 98765 43210',
-      role: role,
-      location: formData.farmLocation,
-      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${formData.email || 'GundaFarmer'}`
-    };
+    if (mode === 'register') {
+      const result = await registerUserInSupabase({
+        name: formData.name || 'Agri User',
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        role: role,
+        location: formData.farmLocation
+      });
 
-    // Save to Supabase (if configured)
-    await saveUserProfile(userProfile);
+      if (!result.success) {
+        setLoading(false);
+        setErrorMessage(result.error);
+        return;
+      }
 
-    setLoading(false);
-    setSuccessMessage(mode === 'login' ? 'Successfully Logged In!' : 'Account Created Successfully!');
+      setLoading(false);
+      setSuccessMessage('Account Created & Saved in Supabase!');
+      setTimeout(() => {
+        onLoginSuccess(result.user);
+        onClose();
+        setSuccessMessage('');
+      }, 800);
 
-    setTimeout(() => {
-      onLoginSuccess(userProfile);
-      onClose();
-      setSuccessMessage('');
-    }, 800);
+    } else {
+      // Login mode
+      const result = await loginUserInSupabase(formData.email, formData.password);
+
+      if (!result.success) {
+        setLoading(false);
+        setErrorMessage(result.error);
+        return;
+      }
+
+      setLoading(false);
+      setSuccessMessage(`Welcome back, ${result.user.name}!`);
+      setTimeout(() => {
+        onLoginSuccess(result.user);
+        onClose();
+        setSuccessMessage('');
+      }, 800);
+    }
   };
 
   const handleDemoLogin = (demoRole) => {
     setRole(demoRole);
     setLoading(true);
+    setErrorMessage('');
     setTimeout(() => {
       setLoading(false);
       const demoUsers = {
@@ -87,7 +113,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
         onClose();
         setSuccessMessage('');
       }, 800);
-    }, 900);
+    }, 600);
   };
 
   return (
@@ -163,7 +189,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
               <div className="flex space-x-2 bg-slate-100 p-1 rounded-xl">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => { setMode('login'); setErrorMessage(''); }}
                   className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${
                     mode === 'login' 
                       ? 'bg-emerald-700 text-white shadow-sm' 
@@ -174,7 +200,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMode('register')}
+                  onClick={() => { setMode('register'); setErrorMessage(''); }}
                   className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${
                     mode === 'register' 
                       ? 'bg-emerald-700 text-white shadow-sm' 
@@ -251,7 +277,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                       type="text"
                       name="name"
                       required
-                      placeholder="e.g. Sameer Patel"
+                      placeholder="e.g. basava"
                       value={formData.name}
                       onChange={handleChange}
                       className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
@@ -316,6 +342,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                   </button>
                 </div>
               </div>
+
+              {/* Error Alert Banner */}
+              {errorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
               {/* Success Message Banner */}
               {successMessage && (
