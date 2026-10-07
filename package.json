@@ -1,0 +1,13 @@
+{
+  "name": "agriculture-platform",
+  "version": "1.0.0",
+  "description": "AgriSmart - Smart Agriculture & Farmer Assistance Platform",
+  "scripts": {
+    "start:server": "cd server && npm start",
+    "start:client": "cd client && npm run dev",
+    "build": "cd client && npm run build"
+  },
+  "keywords": ["agriculture", "farmer", "mandi-rates", "pest-diagnosis", "crop-inventory"],
+  "author": "",
+  "license": "ISC"
+}
