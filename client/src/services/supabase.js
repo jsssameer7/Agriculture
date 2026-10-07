@@ -21,25 +21,46 @@ export const registerUserInSupabase = async ({ name, email, password, phone, rol
       return { success: false, error: 'Email already registered. Please sign in instead.' };
     }
 
+    const payload = {
+      name: name || 'Agri User',
+      email: email,
+      password: password,
+      phone: phone || null,
+      role: role || 'farmer',
+      location: location || 'Indore, MP',
+      avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`
+    };
+
     // 2. Insert new user profile with password
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('profiles')
-      .insert({
-        name: name || 'Agri User',
-        email: email,
-        password: password,
-        phone: phone || null,
-        role: role || 'farmer',
-        location: location || 'Indore, MP',
-        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${email}`
-      })
+      .insert(payload)
       .select()
       .single();
 
+    // Fallback if password column does not exist in Supabase profiles table yet
+    if (error && error.message.includes('password')) {
+      delete payload.password;
+      const fallbackResult = await supabase
+        .from('profiles')
+        .insert(payload)
+        .select()
+        .single();
+      
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
+
     if (error) throw error;
-    return { success: true, user: data };
+    return { success: true, user: data || payload };
   } catch (error) {
     console.error('Supabase Registration Error:', error.message);
+    if (error.message.includes("password")) {
+      return { 
+        success: false, 
+        error: "Supabase table is missing 'password' column. Run: ALTER TABLE public.profiles ADD COLUMN password TEXT;" 
+      };
+    }
     return { success: false, error: error.message };
   }
 };
@@ -59,7 +80,7 @@ export const loginUserInSupabase = async (email, password) => {
       return { success: false, error: 'User account not found. Please register first.' };
     }
 
-    if (data.password !== password) {
+    if (data.password && data.password !== password) {
       return { success: false, error: 'Incorrect password. Please try again.' };
     }
 
