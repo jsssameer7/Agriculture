@@ -6,6 +6,7 @@ import MarketPrices from './components/MarketPrices';
 import FarmInventory from './components/FarmInventory';
 import ExpenseTracker from './components/ExpenseTracker';
 import WeatherWidget from './components/WeatherWidget';
+import AuthModal from './components/AuthModal';
 
 import { 
   fetchWeather, 
@@ -18,6 +19,8 @@ import {
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [lang, setLang] = useState('EN');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   // Global Data State
   const [weatherData, setWeatherData] = useState(null);
@@ -26,6 +29,28 @@ const App = () => {
   const [inventoryData, setInventoryData] = useState({ plots: [], harvestInventory: [], summary: {} });
   const [expenseData, setExpenseData] = useState({ analytics: {}, transactions: [] });
   const [loading, setLoading] = useState(true);
+
+  // Restore user session from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem('gunda_plant_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Failed to parse user session:', e);
+      }
+    }
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('gunda_plant_user', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('gunda_plant_user');
+  };
 
   const loadAllData = async () => {
     setLoading(true);
@@ -56,7 +81,10 @@ const App = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         lang={lang} 
-        setLang={setLang} 
+        setLang={setLang}
+        user={user}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}
@@ -68,6 +96,8 @@ const App = () => {
             marketPrices={marketPrices}
             inventoryData={inventoryData}
             expenseData={expenseData}
+            user={user}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
           />
         )}
 
@@ -111,6 +141,13 @@ const App = () => {
           <span>Version 2.0 &bull; Built with React & Express</span>
         </div>
       </footer>
+
+      {/* User Auth Login/Register Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
 };

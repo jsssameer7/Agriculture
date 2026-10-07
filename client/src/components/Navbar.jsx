@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Sprout, 
   LayoutDashboard, 
@@ -7,10 +7,18 @@ import {
   Layers, 
   Receipt, 
   CloudSun,
-  Globe
+  Globe,
+  User,
+  LogOut,
+  ChevronDown,
+  ShieldCheck,
+  Tractor,
+  Store
 } from 'lucide-react';
 
-const Navbar = ({ activeTab, setActiveTab, lang, setLang }) => {
+const Navbar = ({ activeTab, setActiveTab, lang, setLang, user, onOpenAuthModal, onLogout }) => {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'pest', label: 'Pest Diagnostics', icon: Bug },
@@ -26,6 +34,17 @@ const Navbar = ({ activeTab, setActiveTab, lang, setLang }) => {
     { code: 'MR', name: 'मराठी (Marathi)' },
     { code: 'ES', name: 'Español' },
   ];
+
+  const getRoleBadge = (role) => {
+    switch (role) {
+      case 'expert':
+        return <span className="bg-teal-500/20 text-teal-200 text-[10px] px-2 py-0.5 rounded-full border border-teal-400/30 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Expert</span>;
+      case 'trader':
+        return <span className="bg-amber-500/20 text-amber-200 text-[10px] px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1"><Store className="w-3 h-3" /> Trader</span>;
+      default:
+        return <span className="bg-emerald-500/20 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/30 flex items-center gap-1"><Tractor className="w-3 h-3" /> Farmer</span>;
+    }
+  };
 
   return (
     <header className="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
@@ -69,9 +88,10 @@ const Navbar = ({ activeTab, setActiveTab, lang, setLang }) => {
             })}
           </nav>
 
-          {/* Right actions: Language switcher & status */}
+          {/* Right actions: Language switcher & User Auth */}
           <div className="flex items-center space-x-3">
-            <div className="relative flex items-center bg-emerald-900/60 rounded-lg px-2.5 py-1.5 border border-emerald-700/50">
+            {/* Language Picker */}
+            <div className="hidden sm:flex items-center bg-emerald-900/60 rounded-lg px-2.5 py-1.5 border border-emerald-700/50">
               <Globe className="w-4 h-4 text-emerald-300 mr-2" />
               <select
                 value={lang}
@@ -85,6 +105,57 @@ const Navbar = ({ activeTab, setActiveTab, lang, setLang }) => {
                 ))}
               </select>
             </div>
+
+            {/* User Auth Section */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-2 bg-emerald-900/80 hover:bg-emerald-900 px-3 py-1.5 rounded-xl border border-emerald-600/50 transition-all shadow-sm"
+                >
+                  <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold ring-2 ring-emerald-400/40">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <div className="text-xs font-semibold leading-tight text-emerald-100 flex items-center gap-1.5">
+                      {user.name}
+                    </div>
+                    {getRoleBadge(user.role)}
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-emerald-300" />
+                </button>
+
+                {/* Profile Dropdown */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl py-2 z-50 border border-slate-100 text-slate-800 animate-scaleUp">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-900">{user.name}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{user.email || user.phone}</p>
+                      <div className="mt-1.5">{getRoleBadge(user.role)}</div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        onLogout();
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center space-x-2 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={onOpenAuthModal}
+                className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition-all border border-emerald-400/40 transform hover:scale-105 active:scale-95"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In / Register</span>
+              </button>
+            )}
           </div>
         </div>
 
